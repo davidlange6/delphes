@@ -8,6 +8,7 @@
 #include "SolGeom.h"
 #include "TrkUtil.h"
 #include <TGraph.h>
+#include <iostream>
 //
 //
 // Class to store track information
@@ -20,6 +21,10 @@ class SolTrack: public TrkUtil
 	// Assume tracks originate from (0,0) for the time being
 	//
 private:
+  void CheckHitLayerCache() { if ( nLayerTotal == -1 ) HitLayerUpdateCache(); } 
+       void HitLayerUpdateCache();
+       Bool_t HitLayerUpdateCache(Int_t Layer, Double_t &R, Double_t &phi, Double_t &zz);
+
 	Int_t fNl;	// Actual number of layers
 	SolGeom *fG;	// Geometry
 	Double_t fp[3];	// px, py, pz momentum 
@@ -27,6 +32,13 @@ private:
 	Double_t fpar[5];	// D, phi0, C, z0, cot(theta)
 	//
 	TMatrixDSym fCov;		// Full covariance matrix
+	Int_t nLayerTotal;
+
+	Double_t *R_layers; // Caching expensive information
+	Double_t *phi_layers;
+	Double_t *zz_layers;
+	Bool_t *hit_layers;
+
 	//
 	//
 public:

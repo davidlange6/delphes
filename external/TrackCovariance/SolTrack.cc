@@ -1,5 +1,4 @@
-
-#include "SolGeom.h"
+#include "SolGeom.h"  
 #include "SolTrack.h"
 #include <TString.h>
 #include <TMath.h>
@@ -36,6 +35,11 @@ SolTrack::SolTrack(Double_t *x, Double_t *p, SolGeom *G)
 	// Init covariances
 	//
 	fCov.ResizeTo(5, 5);
+	nLayerTotal=-1;
+	R_layers=nullptr;
+	phi_layers=nullptr;
+	zz_layers=nullptr;
+	hit_layers=nullptr;
 }
 SolTrack::SolTrack(TVector3 x, TVector3 p, SolGeom* G)
 {
@@ -60,6 +64,11 @@ SolTrack::SolTrack(TVector3 x, TVector3 p, SolGeom* G)
 	// Init covariances
 	//
 	fCov.ResizeTo(5, 5);
+	nLayerTotal=-1;
+	R_layers=nullptr;
+	phi_layers=nullptr;
+	zz_layers=nullptr;
+	hit_layers=nullptr;
 }
 //
 SolTrack::SolTrack(Double_t D, Double_t phi0, Double_t C, Double_t z0, Double_t ct, SolGeom *G)
@@ -85,15 +94,55 @@ SolTrack::SolTrack(Double_t D, Double_t phi0, Double_t C, Double_t z0, Double_t 
 	// Init covariances
 	//
 	fCov.ResizeTo(5, 5);
+	nLayerTotal=-1;
+	R_layers=nullptr;
+	phi_layers=nullptr;
+	zz_layers=nullptr;
+	hit_layers=nullptr;
 }
 // Destructor
 SolTrack::~SolTrack()
 {
 	fCov.Clear();
+	delete [] R_layers;
+	delete [] phi_layers;
+	delete [] zz_layers;
+	delete [] hit_layers;
 }
 //
 // Calculate intersection with given layer
-Bool_t SolTrack::HitLayer(Int_t il, Double_t &R, Double_t &phi, Double_t &zz)
+//Refresh cache
+void SolTrack::HitLayerUpdateCache() {
+
+  nLayerTotal = fG->Nl();
+  
+  delete [] R_layers;
+  delete [] phi_layers;
+  delete [] zz_layers;
+  delete [] hit_layers;
+
+  if ( nLayerTotal > 0) {
+    R_layers = new Double_t[nLayerTotal];
+    phi_layers = new Double_t[nLayerTotal];
+    zz_layers = new Double_t[nLayerTotal];
+    hit_layers = new Bool_t[nLayerTotal];
+  }
+  
+  for (Int_t i = 0; i < nLayerTotal; i++) {
+    hit_layers[i] = HitLayerUpdateCache(i, R_layers[i], phi_layers[i], zz_layers[i]);
+  }
+}
+
+
+Bool_t SolTrack::HitLayer(Int_t il, Double_t &R, Double_t &phi, Double_t &zz) {
+  CheckHitLayerCache(); 
+  R = R_layers[il];
+  phi = phi_layers[il];
+  zz = zz_layers[il];
+  return hit_layers[il];
+}
+
+Bool_t SolTrack::HitLayerUpdateCache(Int_t il, Double_t &R, Double_t &phi, Double_t &zz)
 {
 	Double_t Di = D();
 	Double_t phi0i = phi0();
@@ -106,20 +155,22 @@ Bool_t SolTrack::HitLayer(Int_t il, Double_t &R, Double_t &phi, Double_t &zz)
 	Double_t Rmin2 = fx[0] * fx[0] + fx[1] * fx[1]; // Smallest track radius squared
 	if (Rmin2 < Di*Di) return val;
 	//
-	Double_t ArgzMin = Ci * TMath::Sqrt((Rmin2 - Di * Di) / (1 + 2 * Ci * Di));
-	Double_t stMin = TMath::ASin(ArgzMin) / Ci;					// Arc length at track origin
+	Double_t inv_onetwoCD = 1.0/(1.0+2.0*Ci*Di);
+	Double_t inv_Ci = 1.0/Ci;  
+        Double_t ArgzMin = Ci * TMath::Sqrt((Rmin2 - Di * Di) * inv_onetwoCD);
+	Double_t stMin = TMath::ASin(ArgzMin) * inv_Ci;					// Arc length at track origin
 	//
 	if (fG->lTyp(il) == 1)			// Cylinder: layer at constant R
 	{
 		R = fG->lPos(il);
-		Double_t argph = (Ci*R + (1 + Ci*Di)*Di / R) / (1. + 2.*Ci*Di);
+		Double_t argph = (Ci*R + (1 + Ci*Di)*Di / R) * inv_onetwoCD;
 		if (TMath::Abs(argph) < 1.0 && R*R > Rmin2)
 		{
-			Double_t argz = Ci*Ci*((R*R - Di*Di) / (1 + 2 * Ci*Di));
+			Double_t argz = Ci*Ci*((R*R - Di*Di) * inv_onetwoCD);
 			if (argz < 1.0)
 			{
 			        argz = TMath::Sqrt(argz);
-				zz = z0i + cti*TMath::ASin(argz) / Ci;
+				zz = z0i + cti*TMath::ASin(argz) * inv_Ci;
 				if (zz > fG->lxMin(il) && zz < fG->lxMax(il))
 				{
 					phi = phi0i + TMath::ASin(argph);
@@ -134,10 +185,10 @@ Bool_t SolTrack::HitLayer(Int_t il, Double_t &R, Double_t &phi, Double_t &zz)
 		Double_t st = (zz - z0i) / cti;
 		if (TMath::Abs(Ci * st) < 1.0 && st > stMin)
 		{
-			R = TMath::Sqrt(Di * Di + (1. + 2. * Ci * Di) * pow(TMath::Sin(Ci * st), 2) / (Ci * Ci));
+ 		        R = TMath::Sqrt(Di * Di + (1. + 2. * Ci * Di) * pow(TMath::Sin(Ci * st), 2) * inv_Ci * inv_Ci);
 			if (R > fG->lxMin(il) && R < fG->lxMax(il))
 			{
-				Double_t arg1 = (Ci*R + (1 + Ci*Di)*Di / R) / (1. + 2.*Ci*Di);
+  			        Double_t arg1 = ((Ci*R + (1 + Ci*Di)*Di / R)) * inv_onetwoCD;
 				if (TMath::Abs(arg1) < 1.0)
 				{
 					phi = phi0i + TMath::ASin(arg1);
@@ -156,7 +207,7 @@ Int_t SolTrack::nHit()
 	Int_t kh = 0;
 	Double_t R; Double_t phi; Double_t zz;
 	for (Int_t i = 0; i < fG->Nl(); i++)
-	if (HitLayer(i, R, phi, zz))kh++;
+	  if (HitLayer(i, R, phi, zz))kh++;
 	//
 	return kh;
 }
@@ -167,7 +218,8 @@ Int_t SolTrack::nmHit()
 	Int_t kmh = 0;
 	Double_t R; Double_t phi; Double_t zz;
 	for (Int_t i = 0; i < fG->Nl(); i++)
-	if (HitLayer(i, R, phi, zz))if (fG->isMeasure(i))kmh++;
+	  if (fG->isMeasure(i))
+	    if (HitLayer(i, R, phi, zz)) kmh++;
 	//
 	return kmh;
 }
@@ -217,11 +269,11 @@ Int_t SolTrack::HitListXYZ(Int_t *&ihh, Double_t *&Xh, Double_t *&Yh, Double_t *
 	Int_t kmh = 0;  // Number of measurement layers hit
 	for (Int_t i = 0; i < fG->Nl(); i++)
 	{
-		Double_t R; Double_t phi; Double_t zz;
-		if (HitLayer(i, R, phi, zz)) // Only barrel type layers
-		{
-			if (fG->isMeasure(i))
-			{
+	        if (fG->isMeasure(i))
+	        {
+		        Double_t R; Double_t phi; Double_t zz;
+			if (HitLayer(i, R, phi, zz)) // Only barrel type layers
+		        {
 				ihh[kmh] = i;
 				Xh[kmh] = R*cos(phi);
 				Yh[kmh] = R*sin(phi);
@@ -242,6 +294,9 @@ Int_t SolTrack::FirstHit(Double_t &Xfirst, Double_t &Yfirst, Double_t &Zfirst)
 	Yfirst = 0.;
 	Zfirst = 0.;
 	Int_t Nmh = nmHit();	// # measurement hits
+	Double_t Ci = C();
+	Double_t inv_Ci = 1.0/Ci;
+	Double_t Di = D();
 	if(Nmh > 0){
 		Int_t    *ih = new Int_t   [Nmh];
 		Double_t *Xh = new Double_t[Nmh];
@@ -253,7 +308,7 @@ Int_t SolTrack::FirstHit(Double_t &Xfirst, Double_t &Yfirst, Double_t &Zfirst)
 		//
 		for(Int_t i=0; i<Nmh; i++){
 			Double_t rr2 = (Xh[i]*Xh[i]+Yh[i]*Yh[i]);	// Hit radius
-			dh[i] = TMath::ASin(C() * TMath::Sqrt((rr2 - D() * D()) / (1. + 2 * C() * D()))) / C();	// Arc length traveled
+			dh[i] = TMath::ASin(Ci * TMath::Sqrt((rr2 - Di * Di) / (1. + 2 * Ci * Di))) * inv_Ci;	// Arc length traveled
 		}
 		//
 		Int_t *hord = new Int_t[Nmh];			// hit order by increasing arc length
@@ -345,17 +400,16 @@ void SolTrack::CovCalc(Bool_t Res, Bool_t MS)
 	Int_t Nhit = nHit();				// Total number of layers hit
 	Double_t *zhh = new Double_t[Nhit];		// z of hit
 	Double_t *rhh = new Double_t[Nhit];		// r of hit
-	Double_t *dhh = new Double_t[Nhit];		// distance of hit from origin
 	Int_t    *ihh = new Int_t[Nhit];		// true index of layer
-	Int_t kmh;					// Number of measurement layers hit
 	Double_t Di = D();
 	Double_t Ci = C();
 	Double_t inv_Ci = 1.0/Ci;
 	//
-	kmh = HitList(ihh, rhh, zhh);			// hit layer list
+	Int_t kmh = HitList(ihh, rhh, zhh);			// hit layer list
 	Double_t inv_onetwocd = 1.0/(1 + 2 * Ci*Di);
 
 	Int_t mTot = 0;					// Total number of measurements
+	Double_t *dhh = new Double_t[Nhit];		// distance of hit from origin
 	for (Int_t i = 0; i < Nhit; i++)
 	{
 		Double_t rr = rhh[i];
