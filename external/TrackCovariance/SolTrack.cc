@@ -476,7 +476,7 @@ void SolTrack::CovCalc(Bool_t Res, Bool_t MS)
 		}
 		Double_t corr = TMath::Abs(pxi*nx + pyi * ny + pzi * nz) * inv_p;
 		Double_t Rlf = fG->lTh(i) / (corr*fG->lX0(i));					// Rad. length fraction
-		thms[ii] = 0.0136*TMath::Sqrt(Rlf)*(1.0 + 0.038*TMath::Log(Rlf)) * inv_pt;		// MS angle
+		thms[ii] = 0.0136*TMath::Sqrt(Rlf)*(1.0 + 0.038*TMath::Log(Rlf)) * inv_p;		// MS angle
 		if (!MS)thms[ii] = 0;
 		//
 		for (Int_t kk = 0; kk < ii; kk++)	// Fill distances between layers
@@ -604,7 +604,6 @@ void SolTrack::CovCalc(Bool_t Res, Bool_t MS)
 							if (nmk + 1 == 1) strk = strk_upper;	// Stereo angle upper
 							if (nmk + 1 == 2) strk = strk_lower;	// Stereo angle lower
 							Double_t ck = TMath::Abs(TMath::Cos(strk)); Double_t sk = TMath::Abs(TMath::Sin(strk));
-
 							//if (im == km && Res) Sm(im, km) += sig*sig;	// Detector resolution on diagonal
 							if (im == km && Res) {
 								Double_t sg = sig;
@@ -625,6 +624,7 @@ void SolTrack::CovCalc(Bool_t Res, Bool_t MS)
 								if (ktyp == 1) msk = ms * sntinv;			// Barrel
 								else if (ktyp == 2) msk = ms * cstinv;		// Disk
 								Sm(im, km) += di*dk*(ci*ck*ms*ms + si*sk*msi*msk);	// Ms contribution
+
 							}
 							//
 							Sm(km, im) = Sm(im, km);
@@ -639,6 +639,7 @@ void SolTrack::CovCalc(Bool_t Res, Bool_t MS)
 	Sm.ResizeTo(mTot, mTot);
 	TMatrixDSym SmTemp = Sm;
 	Rm.ResizeTo(mTot, 5);
+
 	//
 	//**********************************************************************
 	// Calculate covariance from derivatives and measurement error matrix  *
