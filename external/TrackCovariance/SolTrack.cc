@@ -676,13 +676,14 @@ void SolTrack::MatrixManip(Int_t mTot, TMatrixDSym &Sm, TMatrixD &Rm ) {
 	//TMatrixDSym SmN(mTot);
 	// some extra calculations
 
-	TVectorD dSmInv_vect(mTot);
+	Double_t *dSmInv_vect = new Double_t[mTot];
+	//TVectorD dSmInv_vect(mTot);
 	//SmN = Sm;
 	Double_t *Sm_array=Sm.GetMatrixArray();
-	for (Int_t id = 0; id < mTot; id++) dSmInv_vect(id) = 1.0 / TMath::Sqrt(Sm_array[id*mTot+ id]);
+	for (Int_t id = 0; id < mTot; id++) dSmInv_vect[id] = 1.0 / TMath::Sqrt(Sm_array[id*mTot+ id]);
 	for (Int_t id = 0; id < mTot; id++) 	
 	  for (Int_t id2 = 0; id2 < mTot; id2++) 
-	    Sm_array[id*mTot+id2] *= (dSmInv_vect(id)*dSmInv_vect(id2));
+	    Sm_array[id*mTot+id2] *= (dSmInv_vect[id]*dSmInv_vect[id2]);
 	  
  	//
 	// Protected matrix inversions
@@ -714,10 +715,11 @@ void SolTrack::MatrixManip(Int_t mTot, TMatrixDSym &Sm, TMatrixD &Rm ) {
 	Sm = SmNinv;
 	Sm_array=Sm.GetMatrixArray();
 	for (Int_t id = 0; id < mTot; id++) 	
-	  for (Int_t id2 = 0; id2 < mTot; id2++) {
-	    Sm_array[id*mTot+id2] *= (dSmInv_vect(id)*dSmInv_vect(id2));
-	  }
-	
+	  for (Int_t id2 = 0; id2 < mTot; id2++) 
+	    Sm_array[id*mTot+id2] *= (dSmInv_vect[id]*dSmInv_vect[id2]);
+	  
+	delete [] dSmInv_vect;
+
 
 
 	fCov = Sm.SimilarityT(Rm);		// Calculate half Hessian
