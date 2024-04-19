@@ -23,7 +23,7 @@ class SolTrack: public TrkUtil
 private:
   void CheckHitLayerCache() { if ( nLayerTotal == -1 ) HitLayerUpdateCache(); } 
        void HitLayerUpdateCache();
-       Bool_t HitLayerUpdateCache(Int_t Layer, Double_t &R, Double_t &phi, Double_t &zz);
+       Bool_t HitLayerUpdateCache(Int_t Layer, Double_t &R, Double_t &phi, Double_t &zz, Double_t &dh);
 
 	Int_t fNl;	// Actual number of layers
 	SolGeom *fG;	// Geometry
@@ -37,6 +37,7 @@ private:
 	Double_t *R_layers; // Caching expensive information
 	Double_t *phi_layers;
 	Double_t *zz_layers;
+	Double_t *dh_layers;
 	Bool_t *hit_layers;
 
 	//
@@ -83,9 +84,9 @@ public:
 	// Track hit management
 	Int_t nHit();
 	Int_t nmHit();
-	Bool_t HitLayer(Int_t Layer, Double_t &R, Double_t &phi, Double_t &zz);
-	Int_t HitList(Int_t *&ihh, Double_t *&rhh, Double_t *&zhh);
-	Int_t HitListXYZ(Int_t *&ihh, Double_t *&Xh, Double_t *&Yh, Double_t *&Zh);
+	Bool_t HitLayer(Int_t Layer, Double_t &R, Double_t &phi, Double_t &zz, Double_t &dh);
+	Int_t HitList(Int_t *&ihh, Double_t *&rhh, Double_t *&zhh, Double_t *&dhh);
+	Int_t HitListXYZ(Int_t *&ihh, Double_t *&Xh, Double_t *&Yh, Double_t *&Zh, Double_t *&dh);
 	Int_t FirstHit(Double_t &Xfirst, Double_t &Yfirst, Double_t &Zfirst);	// First hit position
 	//
 	// Track graph
