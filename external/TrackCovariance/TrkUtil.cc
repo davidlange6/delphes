@@ -37,7 +37,7 @@ TrkUtil::~TrkUtil()
 //
 // Distance between two lines
 //
-void TrkUtil::LineDistance(TVector3 x0, TVector3 y0, TVector3 dirx, TVector3 diry, Double_t &sx, Double_t &sy, Double_t &distance)
+void TrkUtil::LineDistance(const TVector3 &x0, const TVector3 &y0, const TVector3 &dirx, const TVector3 &diry, Double_t &sx, Double_t &sy, Double_t &distance)
 {
 	TMatrixDSym M(2);
 	M(0,0) = dirx.Mag2();
@@ -62,7 +62,7 @@ void TrkUtil::LineDistance(TVector3 x0, TVector3 y0, TVector3 dirx, TVector3 dir
 //
 // Covariance smearing
 //
-TVectorD TrkUtil::CovSmear(TVectorD x, TMatrixDSym C)
+TVectorD TrkUtil::CovSmear(const TVectorD &x, const TMatrixDSym &C)
 {
 	//
 	// Check arrays
@@ -115,7 +115,7 @@ TVectorD TrkUtil::CovSmear(TVectorD x, TMatrixDSym C)
 //
 // Helix parameters from position and momentum
 // static
-TVectorD TrkUtil::XPtoPar(TVector3 x, TVector3 p, Double_t Q, Double_t Bz)
+TVectorD TrkUtil::XPtoPar(const TVector3 &x, const TVector3 &p, Double_t Q, Double_t Bz)
 {
 	//
 	TVectorD Par(5);
@@ -158,7 +158,7 @@ TVectorD TrkUtil::XPtoPar(TVector3 x, TVector3 p, Double_t Q, Double_t Bz)
 	return Par;
 }
 // non-static
-TVectorD TrkUtil::XPtoPar(TVector3 x, TVector3 p, Double_t Q)
+TVectorD TrkUtil::XPtoPar(const TVector3 &x, const TVector3 &p, Double_t Q)
 {
 	//
 	TVectorD Par(5);
@@ -168,7 +168,7 @@ TVectorD TrkUtil::XPtoPar(TVector3 x, TVector3 p, Double_t Q)
 	return Par;
 }
 //
-TVector3 TrkUtil::ParToX(TVectorD Par)
+TVector3 TrkUtil::ParToX(const TVectorD &Par)
 {
 	Double_t D = Par(0);
 	Double_t phi0 = Par(1);
@@ -182,14 +182,14 @@ TVector3 TrkUtil::ParToX(TVectorD Par)
 	return Xval;
 }
 //
-TVector3 TrkUtil::ParToP(TVectorD Par)
+TVector3 TrkUtil::ParToP(const TVectorD &Par)
 {
 	if (fBz == 0.0)std::cout << "TrkUtil::ParToP: Warning Bz not set" << std::endl;
 	//
 	return ParToP(Par, fBz);
 }
 //
-TVector3 TrkUtil::ParToP(TVectorD Par, Double_t Bz)
+TVector3 TrkUtil::ParToP(const TVectorD &Par, Double_t Bz)
 {
 	Double_t C = Par(2);
 	Double_t phi0 = Par(1);
@@ -207,7 +207,7 @@ TVector3 TrkUtil::ParToP(TVectorD Par, Double_t Bz)
 // Neutrals
 //
 //static
-TVectorD TrkUtil::XPtoPar_N(TVector3 x, TVector3 p)
+TVectorD TrkUtil::XPtoPar_N(const TVector3 &x, const TVector3 &p)
 {
 //
 // Output neutral track parameter vector:
@@ -230,7 +230,7 @@ TVectorD TrkUtil::XPtoPar_N(TVector3 x, TVector3 p)
 }
 //
 // static
-TVector3 TrkUtil::ParToP_N(TVectorD Par)
+TVector3 TrkUtil::ParToP_N(const TVectorD &Par)
 {
 	Double_t phi0 = Par(1);
 	Double_t pt = Par(2);
@@ -240,14 +240,14 @@ TVector3 TrkUtil::ParToP_N(TVectorD Par)
 	return p;
 }
 //
-Double_t TrkUtil::ParToQ(TVectorD Par)
+Double_t TrkUtil::ParToQ(const TVectorD &Par)
 {
 	return TMath::Sign(1.0, -Par(2));
 }
 
 //
 // Parameter conversion to ACTS format
-TVectorD TrkUtil::ParToACTS(TVectorD Par)
+TVectorD TrkUtil::ParToACTS(const TVectorD &Par)
 {
 	TVectorD pACTS(6);	// Return vector
 	//
@@ -262,7 +262,7 @@ TVectorD TrkUtil::ParToACTS(TVectorD Par)
 	return pACTS;
 }
 // Covariance conversion to ACTS format
-TMatrixDSym TrkUtil::CovToACTS(TVectorD Par, TMatrixDSym Cov)
+TMatrixDSym TrkUtil::CovToACTS(const TVectorD &Par, const TMatrixDSym &Cov)
 {
 	TMatrixDSym cACTS(6); cACTS.Zero();
 	Double_t b = -cSpeed() * fBz / 2.;
@@ -289,7 +289,7 @@ TMatrixDSym TrkUtil::CovToACTS(TVectorD Par, TMatrixDSym Cov)
 }
 //
 // Parameter conversion to ILC format
-TVectorD TrkUtil::ParToILC(TVectorD Par)
+TVectorD TrkUtil::ParToILC(const TVectorD &Par)
 {
 	TVectorD pILC(5);	// Return vector
 	//
@@ -302,7 +302,7 @@ TVectorD TrkUtil::ParToILC(TVectorD Par)
 	return pILC;
 }
 // Covariance conversion to ILC format
-TMatrixDSym TrkUtil::CovToILC(TMatrixDSym Cov)
+TMatrixDSym TrkUtil::CovToILC(const TMatrixDSym &Cov)
 {
 	TMatrixDSym cILC(5); cILC.Zero();
 	//
@@ -325,7 +325,7 @@ TMatrixDSym TrkUtil::CovToILC(TMatrixDSym Cov)
 }
 //
 // Conversion from meters to mm
-TVectorD TrkUtil::ParToMm(TVectorD Par)				// Parameter conversion
+TVectorD TrkUtil::ParToMm(const TVectorD &Par)				// Parameter conversion
 {
 	TVectorD Pmm(5);					// Return vector
 	//
@@ -337,7 +337,7 @@ TVectorD TrkUtil::ParToMm(TVectorD Par)				// Parameter conversion
 	//
 	return Pmm;
 }
-TMatrixDSym TrkUtil::CovToMm(TMatrixDSym Cov)		// Covariance conversion
+TMatrixDSym TrkUtil::CovToMm(const TMatrixDSym &Cov)		// Covariance conversion
 {
 	TMatrixDSym Cmm(5); Cmm.Zero();
 	//
@@ -472,7 +472,7 @@ TMatrixDSym TrkUtil::RegInv(TMatrixDSym& Min)
 // Check potive definite matrix
 //
 
-Bool_t TrkUtil::CheckPosDef(TMatrixDSym Msym)
+Bool_t TrkUtil::CheckPosDef(const TMatrixDSym &Msym)
 {
 	Bool_t retVal = kTRUE;
 	Int_t N = Msym.GetNrows();
@@ -516,7 +516,7 @@ Bool_t TrkUtil::CheckPosDef(TMatrixDSym Msym)
 //
 // Track tracjectory
 //
-TVector3 TrkUtil::Xtrack(TVectorD par, Double_t s)
+TVector3 TrkUtil::Xtrack(const TVectorD &par, Double_t s)
 {
 	//
 	// unpack parameters
@@ -536,7 +536,7 @@ TVector3 TrkUtil::Xtrack(TVectorD par, Double_t s)
 //
 // Phase
 //
-Double_t TrkUtil::GetPhase(TVectorD x, TVectorD par)
+Double_t TrkUtil::GetPhase(const TVectorD &x, const TVectorD &par)
 {
 	// Definitions
 	// Transverse track parameters
@@ -554,7 +554,7 @@ Double_t TrkUtil::GetPhase(TVectorD x, TVectorD par)
 //
 //	Phase derivatives
 //	Track parameters
-TVectorD TrkUtil::dsdPar(TVectorD x, TVectorD par)
+TVectorD TrkUtil::dsdPar(const TVectorD &x, const TVectorD &par)
 {
 	// 
 	// Definitions
@@ -578,7 +578,7 @@ TVectorD TrkUtil::dsdPar(TVectorD x, TVectorD par)
 }
 //
 // position
-TVectorD TrkUtil::dsdx(TVectorD x, TVectorD par)
+TVectorD TrkUtil::dsdx(const TVectorD &x, const TVectorD &par)
 {
 	// 
 	// Definitions
@@ -603,7 +603,7 @@ TVectorD TrkUtil::dsdx(TVectorD x, TVectorD par)
 //
 // Trajectory of neutrals
 //
-TVector3 TrkUtil::Xtrack_N(TVectorD par, Double_t s)
+TVector3 TrkUtil::Xtrack_N(const TVectorD &par, Double_t s)
 {
 	Double_t p0 = par(1);
 	Double_t ctg = par(4);
@@ -618,7 +618,7 @@ TVector3 TrkUtil::Xtrack_N(TVectorD par, Double_t s)
 //
 // Constant radius
 // R-Phi
-TVectorD TrkUtil::derRphi_R(TVectorD par, Double_t R)
+TVectorD TrkUtil::derRphi_R(const TVectorD &par, Double_t R)
 {
 	TVectorD dRphi(5);	// return vector
 	//
@@ -645,7 +645,7 @@ TVectorD TrkUtil::derRphi_R(TVectorD par, Double_t R)
 	return dRphi;
 }
 // z
-TVectorD TrkUtil::derZ_R(TVectorD par, Double_t R)
+TVectorD TrkUtil::derZ_R(const TVectorD &par, Double_t R)
 {
 
 	TVectorD dZ(5);	// return vector
@@ -674,7 +674,7 @@ TVectorD TrkUtil::derZ_R(TVectorD par, Double_t R)
 //
 // constant z
 // R-Phi
-TVectorD TrkUtil::derRphi_Z(TVectorD par, Double_t z)
+TVectorD TrkUtil::derRphi_Z(const TVectorD &par, Double_t z)
 {
 	TVectorD dRphi(5);	// return vector
 	//
@@ -703,7 +703,7 @@ TVectorD TrkUtil::derRphi_Z(TVectorD par, Double_t z)
 
 }
 // R
-TVectorD TrkUtil::derR_Z(TVectorD par, Double_t z)
+TVectorD TrkUtil::derR_Z(const TVectorD &par, Double_t z)
 {
 	TVectorD dR(5);	// return vector
 	//
@@ -735,7 +735,7 @@ TVectorD TrkUtil::derR_Z(TVectorD par, Double_t z)
 // derivatives of track trajectory
 //
 // dX/dPar
-TMatrixD TrkUtil::derXdPar(TVectorD par, Double_t s)
+TMatrixD TrkUtil::derXdPar(const TVectorD &par, Double_t s)
 {
 	TMatrixD dxdp(3, 5);	// return matrix
 	//
@@ -773,7 +773,7 @@ TMatrixD TrkUtil::derXdPar(TVectorD par, Double_t s)
 //
 // dX/ds
 //
-TVectorD TrkUtil::derXds(TVectorD par, Double_t s)
+TVectorD TrkUtil::derXds(const TVectorD &par, Double_t s)
 {
 	TVectorD dxds(3);	// return vector
 	//
@@ -792,7 +792,7 @@ TVectorD TrkUtil::derXds(TVectorD par, Double_t s)
 //
 // derivative of trajectory phase s
 //Constant R
-TVectorD TrkUtil::dsdPar_R(TVectorD par, Double_t R)
+TVectorD TrkUtil::dsdPar_R(const TVectorD &par, Double_t R)
 {
 	TVectorD dsdp(5);	// return vector
 	//
@@ -817,7 +817,7 @@ TVectorD TrkUtil::dsdPar_R(TVectorD par, Double_t R)
 	return dsdp;
 }
 // Constant z
-TVectorD TrkUtil::dsdPar_z(TVectorD par, Double_t z)
+TVectorD TrkUtil::dsdPar_z(const TVectorD &par, Double_t z)
 {
 	TVectorD dsdp(5);	// return vector
 	//
@@ -839,7 +839,7 @@ TVectorD TrkUtil::dsdPar_z(TVectorD par, Double_t z)
 //
 // Derivatives of neutral trajectory
 //dX/dPar
-TMatrixD TrkUtil::derXdPar_N(TVectorD par, Double_t s)	// derivatives of position wrt parameters
+TMatrixD TrkUtil::derXdPar_N(const TVectorD &par, Double_t s)	// derivatives of position wrt parameters
 {
 	TMatrixD dxdp(3, 5);	// return matrix
 	//
@@ -876,7 +876,7 @@ TMatrixD TrkUtil::derXdPar_N(TVectorD par, Double_t s)	// derivatives of positio
 	return dxdp;
 }
 //dX/ds 
-TVectorD TrkUtil::derXds_N(TVectorD par, Double_t s)	// derivatives of position wrt phase
+TVectorD TrkUtil::derXds_N(const TVectorD &par, Double_t s)	// derivatives of position wrt phase
 {
 	TVectorD dxds(3);	// return vector
 	//
@@ -892,7 +892,7 @@ TVectorD TrkUtil::derXds_N(TVectorD par, Double_t s)	// derivatives of position 
 	return dxds;
 }
 //ds/dPar const R
-TVectorD TrkUtil::dsdPar_R_N(TVectorD par, Double_t R)	// derivatives of phase at constant R
+TVectorD TrkUtil::dsdPar_R_N(const TVectorD &par, Double_t R)	// derivatives of phase at constant R
 {
 	TVectorD dsdp(5);	// return vector
 	//
@@ -913,7 +913,7 @@ TVectorD TrkUtil::dsdPar_R_N(TVectorD par, Double_t R)	// derivatives of phase a
 	return dsdp;
 }
 //ds/dPar const z
-TVectorD TrkUtil::dsdPar_z_N(TVectorD par, Double_t z)	// derivatives of phase at constant z
+TVectorD TrkUtil::dsdPar_z_N(const TVectorD &par, Double_t z)	// derivatives of phase at constant z
 {
 	TVectorD dsdp(5);	// return vector
 	//
@@ -942,7 +942,7 @@ void TrkUtil::SetDchBoundaries(Double_t Rmin, Double_t Rmax, Double_t Zmin, Doub
 }
 //
 // Get Trakck length inside DCH volume
-Double_t TrkUtil::TrkLen(TVectorD Par)
+Double_t TrkUtil::TrkLen(const TVectorD &Par)
 {
 	Double_t tLength = 0.0;
 	// Check if geometry is initialized
@@ -1041,7 +1041,7 @@ Double_t TrkUtil::TrkLen(TVectorD Par)
 }
 //
 // Return number of ionization clusters
-Bool_t TrkUtil::IonClusters(Double_t& Ncl, Double_t mass, TVectorD Par)
+Bool_t TrkUtil::IonClusters(Double_t& Ncl, Double_t mass, const TVectorD &Par)
 {
 	//
 	// Units are meters/Tesla/GeV
