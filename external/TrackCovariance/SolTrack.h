@@ -70,6 +70,8 @@ public:
 	TMatrixDSym Cov()		{ return fCov; }
 	// Track parameter covariance calculation
 	void CovCalc(Bool_t Res, Bool_t MS);
+	void MatrixManip(Int_t mTot, TMatrixDSym &Sm, TMatrixD &Rm );
+
 	// Parameter errors
 	Double_t s_D()    { return TMath::Sqrt(fCov(0, 0)); }
 	Double_t s_phi0() { return TMath::Sqrt(fCov(1, 1)); }
