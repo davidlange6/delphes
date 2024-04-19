@@ -520,11 +520,12 @@ TVector3 TrkUtil::Xtrack(const TVectorD &par, Double_t s)
 {
 	//
 	// unpack parameters
-	Double_t D = par(0);
-	Double_t p0 = par(1);
-	Double_t C = par(2);
-	Double_t z0 = par(3);
-	Double_t ct = par(4);
+        const Double_t *par_array = par.GetMatrixArray();
+	Double_t D = par_array[0];
+	Double_t p0 = par_array[1];
+	Double_t C = par_array[2];
+	Double_t z0 = par_array[3];
+	Double_t ct = par_array[4];
 	//
 	Double_t x = -D * TMath::Sin(p0) + (TMath::Sin(s + p0) - TMath::Sin(p0)) / (2 * C);
 	Double_t y =  D * TMath::Cos(p0) - (TMath::Cos(s + p0) - TMath::Cos(p0)) / (2 * C);	
@@ -540,7 +541,6 @@ Double_t TrkUtil::GetPhase(const TVectorD &x, const TVectorD &par)
 {
 	// Definitions
 	// Transverse track parameters
-	Double_t D = par(0);
 	Double_t phi0 = par(1);
 	Double_t sf = TMath::Sin(phi0);
 	Double_t cf = TMath::Cos(phi0);
@@ -559,7 +559,6 @@ TVectorD TrkUtil::dsdPar(const TVectorD &x, const TVectorD &par)
 	// 
 	// Definitions
 	// Transverse track parameters
-	Double_t D = par(0);
 	Double_t phi0 = par(1);
 	Double_t sf = TMath::Sin(phi0);
 	Double_t cf = TMath::Cos(phi0);
@@ -583,7 +582,6 @@ TVectorD TrkUtil::dsdx(const TVectorD &x, const TVectorD &par)
 	// 
 	// Definitions
 	// Transverse track parameters
-	Double_t D = par(0);
 	Double_t phi0 = par(1);
 	Double_t sf = TMath::Sin(phi0);
 	Double_t cf = TMath::Cos(phi0);
@@ -621,24 +619,30 @@ TVector3 TrkUtil::Xtrack_N(const TVectorD &par, Double_t s)
 TVectorD TrkUtil::derRphi_R(const TVectorD &par, Double_t R)
 {
 	TVectorD dRphi(5);	// return vector
+	Double_t *dRphi_array = dRphi.GetMatrixArray();
+	const Double_t *par_array = par.GetMatrixArray();
 	//
 	// unpack parameters
-	Double_t D = par(0);
-	Double_t C = par(2);
+	Double_t D = par_array[0];
+	Double_t C = par_array[2];
 	//
 	Double_t s = 2 * TMath::ASin(C * TMath::Sqrt((R * R - D * D)/(1 + 2 * C * D)));
 	TVector3 X = Xtrack(par, s);		// Intersection point
 	TVector3 v(-X.y()/R, X.x()/R, 0.);	// measurement direction
 	TMatrixD derX = derXdPar(par, s);	// dX/dp
+	Double_t *derX_array = derX.GetMatrixArray();
 	TVectorD derXs = derXds(par, s);	// dX/ds
+	Double_t *derXs_array = derXs.GetMatrixArray();
 	TVectorD ders = dsdPar_R(par, R);	// ds/dp	
+	Double_t *ders_array = ders.GetMatrixArray();
+	
 	//
 	for (Int_t i = 0; i < 5; i++)
 	{
-		dRphi(i) = 0.;
+		dRphi_array[i] = 0.;
 		for (Int_t j = 0; j < 3; j++)
 		{
-			dRphi(i) += v(j) * (derX(j, i) + derXs(j) * ders(i));
+			dRphi_array[i] += v(j) * (derX_array[j*5+ i] + derXs_array[j] * ders_array[i]);
 		}
 	}
 	//
@@ -649,6 +653,7 @@ TVectorD TrkUtil::derZ_R(const TVectorD &par, Double_t R)
 {
 
 	TVectorD dZ(5);	// return vector
+	Double_t *dZ_array = dZ.GetMatrixArray();
 	//
 	// unpack parameters
 	Double_t D = par(0);
@@ -657,15 +662,19 @@ TVectorD TrkUtil::derZ_R(const TVectorD &par, Double_t R)
 	Double_t s = 2 * TMath::ASin(C * TMath::Sqrt((R * R - D * D)/(1 + 2 * C * D))); // phase
 	TVector3 v(0., 0., 1.);				// measurement direction
 	TMatrixD derX = derXdPar(par, s);	// dX/dp
+	Double_t *derX_array = derX.GetMatrixArray();
 	TVectorD derXs = derXds(par, s);	// dX/ds
+	Double_t *derXs_array = derXs.GetMatrixArray();
 	TVectorD ders = dsdPar_R(par, R);	// ds/dp	
+	Double_t *ders_array = ders.GetMatrixArray();
+
 	//
 	for (Int_t i = 0; i < 5; i++)
 	{
-		dZ(i) = 0.;
+		dZ_array[i] = 0.;
 		for (Int_t j = 0; j < 3; j++)
 		{
-			dZ(i) += v(j) * (derX(j, i) + derXs(j) * ders(i));
+  		    dZ_array[i] += v(j) * (derX_array[j*5+ i] + derXs_array[j] * ders_array[i]);
 		}
 	}
 	//
@@ -677,6 +686,7 @@ TVectorD TrkUtil::derZ_R(const TVectorD &par, Double_t R)
 TVectorD TrkUtil::derRphi_Z(const TVectorD &par, Double_t z)
 {
 	TVectorD dRphi(5);	// return vector
+	Double_t *dRphi_array = dRphi.GetMatrixArray();
 	//
 	// unpack parameters
 	Double_t C = par(2);
@@ -687,15 +697,18 @@ TVectorD TrkUtil::derRphi_Z(const TVectorD &par, Double_t z)
 	TVector3 X = Xtrack(par, s);			// Intersection point
 	TVector3 v(-X.y() / X.Pt(), X.x() / X.Pt(), 0.);	// measurement direction
 	TMatrixD derX = derXdPar(par, s);		// dX/dp
+	Double_t *derX_array = derX.GetMatrixArray();
 	TVectorD derXs = derXds(par, s);		// dX/ds
+	Double_t *derXs_array = derXs.GetMatrixArray();
 	TVectorD ders = dsdPar_z(par, z);		// ds/dp	
+	Double_t *ders_array = ders.GetMatrixArray();
 	//
 	for (Int_t i = 0; i < 5; i++)
 	{
-		dRphi(i) = 0.;
+		dRphi_array[i] = 0.;
 		for (Int_t j = 0; j < 3; j++)
 		{
-			dRphi(i) += v(j) * (derX(j, i) + derXs(j) * ders(i));
+			dRphi_array[i] += v(j) * (derX_array[j*5+i] + derXs_array[j] * ders_array[i]);
 		}
 	}
 	//
@@ -738,6 +751,7 @@ TVectorD TrkUtil::derR_Z(const TVectorD &par, Double_t z)
 TMatrixD TrkUtil::derXdPar(const TVectorD &par, Double_t s)
 {
 	TMatrixD dxdp(3, 5);	// return matrix
+	Double_t *dxdp_array = dxdp.GetMatrixArray();
 	//
 	// unpack parameters
 	Double_t D = par(0);
@@ -748,25 +762,31 @@ TMatrixD TrkUtil::derXdPar(const TVectorD &par, Double_t s)
 	//
 	// derivatives
 	// dx/dD
-	dxdp(0, 0) = -TMath::Sin(p0);
-	dxdp(1, 0) =  TMath::Cos(p0);
-	dxdp(2, 0) = 0.;
+
+	Double_t sp0 = TMath::Sin(p0);
+	Double_t cp0 = TMath::Cos(p0);
+	Double_t sp0s = TMath::Sin(s+p0);
+	Double_t cp0s = TMath::Cos(s+p0);
+	
+	dxdp_array[0*5+ 0] = -1*sp0;
+	dxdp_array[1*5+ 0] =  cp0;
+	dxdp_array[2*5+ 0] = 0.;
 	// dx/dphi0
-	dxdp(0, 1) = -D * TMath::Cos(p0) + (TMath::Cos(s + p0) - TMath::Cos(p0)) / (2 * C);
-	dxdp(1, 1) = -D * TMath::Sin(p0) + (TMath::Sin(s + p0) - TMath::Sin(p0)) / (2 * C);
-	dxdp(2, 1) = 0;
+	dxdp_array[0*5+ 1] = -D * cp0 + ( cp0s - cp0) / (2 * C);
+	dxdp_array[1*5+ 1] = -D * sp0 + ( sp0s - sp0) / (2 * C);
+	dxdp_array[2*5+ 1] = 0;
 	// dx/dC
-	dxdp(0, 2) = -(TMath::Sin(s + p0) - TMath::Sin(p0)) / (2 * C * C);
-	dxdp(1, 2) =  (TMath::Cos(s + p0) - TMath::Cos(p0)) / (2 * C * C);
-	dxdp(2, 2) = -ct * s / (2 * C * C);
+	dxdp_array[0*5+ 2] = -(sp0s - sp0) / (2 * C * C);
+	dxdp_array[1*5+ 2] =  (cp0s - cp0) / (2 * C * C);
+	dxdp_array[2*5+ 2] = -ct * s / (2 * C * C);
 	// dx/dz0
-	dxdp(0, 3) = 0;
-	dxdp(1, 3) = 0;
-	dxdp(2, 3) = 1.;
+	dxdp_array[0*5+ 3] = 0;
+	dxdp_array[1*5+ 3] = 0;
+	dxdp_array[2*5+ 3] = 1.;
 	// dx/dCtg
-	dxdp(0, 4) = 0;
-	dxdp(1, 4) = 0;
-	dxdp(2, 4) = s / (2 * C);
+	dxdp_array[0*5+ 4] = 0;
+	dxdp_array[1*5+ 4] = 0;
+	dxdp_array[2*5+ 4] = s / (2 * C);
 	//
 	return dxdp;
 }
@@ -795,6 +815,7 @@ TVectorD TrkUtil::derXds(const TVectorD &par, Double_t s)
 TVectorD TrkUtil::dsdPar_R(const TVectorD &par, Double_t R)
 {
 	TVectorD dsdp(5);	// return vector
+	Double_t *dsdp_array = dsdp.GetMatrixArray();
 	//
 	// unpack parameters
 	Double_t D = par(0);
@@ -808,11 +829,11 @@ TVectorD TrkUtil::dsdPar_R(const TVectorD &par, Double_t R)
 	Double_t dMin = 0.01;
 	Double_t sqA = TMath::Max(dMin, sqA0);	// Protect against divergence
 	//
-	dsdp(0) = -2 * C * C * (D * (1. + C * D) + C * R * R) / (A * sqA * opCD * opCD);
-	dsdp(1) = 0;
-	dsdp(2) = 2 * A * (1 + C * D) / (C * sqA * opCD);
-	dsdp(3) = 0;
-	dsdp(4) = 0;
+	dsdp_array[0] = -2 * C * C * (D * (1. + C * D) + C * R * R) / (A * sqA * opCD * opCD);
+	dsdp_array[1] = 0;
+	dsdp_array[2] = 2 * A * (1 + C * D) / (C * sqA * opCD);
+	dsdp_array[3] = 0;
+	dsdp_array[4] = 0;
 	//
 	return dsdp;
 }

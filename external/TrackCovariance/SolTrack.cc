@@ -692,8 +692,7 @@ void SolTrack::MatrixManip(Int_t mTot, TMatrixDSym &Sm, TMatrixD &Rm ) {
 	TMatrixDSym SmNinv = Sm;
 	if (Chl.Decompose())
 	{
-	        Bool_t OK;
-		SmNinv = Chl.Invert(OK);
+	        Bool_t OK = Chl.Invert(SmNinv);
 	}
 	else
 	{
