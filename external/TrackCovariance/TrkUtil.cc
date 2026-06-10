@@ -243,10 +243,11 @@ TVectorD TrkUtil::XPtoPar_N(const TVector3 &x, const TVector3 &p)
 	TVectorD pout(5);
 // Pt
 	pout(2) = p.Pt();
+	Double_t inv_p_pt = 1.0/pout(2);
 // Direction
-	Double_t csp0 = p.X()/p.Pt();
-	Double_t snp0 = p.Y()/p.Pt();
-	pout(4) = p.Z()/p.Pt();
+	Double_t csp0 = p.X()*inv_p_pt;
+	Double_t snp0 = p.Y()*inv_p_pt;
+	pout(4) = p.Z()*inv_p_pt;
 	pout(1) = TMath::ATan2(snp0,csp0);
 // Impact parameters
 	pout(0) = x.Y()*csp0-x.X()*snp0;	// D (transverse)
@@ -624,13 +625,13 @@ TVectorD TrkUtil::dsdPar(const TVectorD &x, const TVectorD &par)
 	Double_t C = par(2);
 	//
 	Double_t sins = 2.*C*(x(0)*cf+x(1)*sf);
-	Double_t coss = TMath::Sqrt(1.-sins*sins);
+	Double_t inv_coss = 1.0/TMath::Sqrt(1.-sins*sins);
 	//
 	// Derivatives
 	//
 	TVectorD der(5); der.Zero();
-	der(1) = (2.*C*(-x(0)*sf+x(1)*cf))/coss;
-	der(2) = 2.*(x(0)*cf+x(1)*sf)/coss;
+	der(1) = (2.*C*(-x(0)*sf+x(1)*cf))*inv_coss;
+	der(2) = 2.*(x(0)*cf+x(1)*sf)*inv_coss;
 //
 	return der;
 }
@@ -806,6 +807,7 @@ TMatrixD TrkUtil::derXdPar(const TVectorD &par, Double_t s)
 
 	Double_t sin_p0 = TMath::Sin(p0);
 	Double_t cos_p0 = TMath::Cos(p0);
+	Double_t inv_2c = 1.0/(2*C);
 	//
 	// derivatives
 	// dx/dD
@@ -813,8 +815,8 @@ TMatrixD TrkUtil::derXdPar(const TVectorD &par, Double_t s)
 	dxdp(1, 0) =  cos_p0;
 	dxdp(2, 0) = 0.;
 	// dx/dphi0
-	dxdp(0, 1) = -D * cos_p0 + (TMath::Cos(s + p0) - cos_p0) / (2 * C);
-	dxdp(1, 1) = -D * sin_p0 + (TMath::Sin(s + p0) - sin_p0) / (2 * C);
+	dxdp(0, 1) = -D * cos_p0 + (TMath::Cos(s + p0) - cos_p0) * inv_2c;
+	dxdp(1, 1) = -D * sin_p0 + (TMath::Sin(s + p0) - sin_p0) * inv_2c;
 	dxdp(2, 1) = 0;
 	// dx/dC
 	dxdp(0, 2) = -(TMath::Sin(s + p0) - sin_p0) / (2 * C * C);
@@ -827,7 +829,7 @@ TMatrixD TrkUtil::derXdPar(const TVectorD &par, Double_t s)
 	// dx/dCtg
 	dxdp(0, 4) = 0;
 	dxdp(1, 4) = 0;
-	dxdp(2, 4) = s / (2 * C);
+	dxdp(2, 4) = s * inv_2c;
 	//
 	return dxdp;
 }
@@ -842,11 +844,12 @@ TVectorD TrkUtil::derXds(const TVectorD &par, Double_t s)
 	Double_t p0 = par(1);
 	Double_t C = par(2);
 	Double_t ct = par(4);
+	Double_t inv_2c = 1.0/(2*C);
 	//
 	// dX/ds
-	dxds(0) = TMath::Cos(s + p0) / (2 * C);
-	dxds(1) = TMath::Sin(s + p0) / (2 * C);
-	dxds(2) = ct / (2 * C);
+	dxds(0) = TMath::Cos(s + p0) * inv_2c;
+	dxds(1) = TMath::Sin(s + p0) * inv_2c;
+	dxds(2) = ct * inv_2c;
 	//
 	return dxds;
 }
@@ -885,15 +888,15 @@ TVectorD TrkUtil::dsdPar_z(const TVectorD &par, Double_t z)
 	// unpack parameters
 	Double_t C = par(2);
 	Double_t z0 = par(3);
-	Double_t ct = par(4);
+	Double_t inv_ct = 1.0/par(4);
 	//
 	// derivatives
 	//
 	dsdp(0) = 0;
 	dsdp(1) = 0;
-	dsdp(2) = 2*(z-z0)/ct;
-	dsdp(3) = -2*C/ct;
-	dsdp(4) = -2*C*(z-z0)/(ct*ct);
+	dsdp(2) = 2*(z-z0)*inv_ct;
+	dsdp(3) = -2*C*inv_ct;
+	dsdp(4) = -2*C*(z-z0)*inv_ct*inv_ct;
 	//
 	return dsdp;
 }
@@ -982,15 +985,15 @@ TVectorD TrkUtil::dsdPar_z_N(const TVectorD &par, Double_t z)	// derivatives of 
 	//
 	// unpack parameters
 	Double_t z0 = par(3);
-	Double_t ct = par(4);
+	Double_t inv_ct = 1.0/par(4);
 	//
 	// derivatives
 	//
 	dsdp(0) = 0;
 	dsdp(1) = 0;
 	dsdp(2) = 0;
-	dsdp(3) = -1./ct;
-	dsdp(4) = -(z-z0)/(ct*ct);
+	dsdp(3) = -1.*inv_ct;
+	dsdp(4) = -(z-z0)*inv_ct*inv_ct;
 	//
 	return dsdp;
 }
