@@ -1191,6 +1191,11 @@ void SolTrack::KalmanCov(Bool_t Res, Bool_t MS, Double_t mass)
 	Double_t *thms = new Double_t[Nhit];		// Scattering angles/plane
 	//
 	Int_t mLast = -1;				// Last measurement layer
+	Double_t mom = p();
+	Double_t mom_t = pt();
+	Double_t inv_mom = 1.0/mom;
+	Double_t inv_mom_t = 1.0/mom_t;
+	Double_t beta = mom/TMath::Sqrt(mass*mass+mom*mom);
 	for (Int_t ii = 0; ii < Nhit; ii++)		// Hit layer loop
 	{
 		
@@ -1208,18 +1213,17 @@ void SolTrack::KalmanCov(Bool_t Res, Bool_t MS, Double_t mass)
 			nz = 1.0;
 		}
 		// Momenta at layer
-		Double_t pxi = pt()*TMath::Cos(dh[ii]+phi0());
-		Double_t pyi = pt()*TMath::Sin(dh[ii]+phi0());
-		Double_t pzi = pt()*ct();
+		Double_t pxi = mom_t*TMath::Cos(dh[ii]+phi0());
+		Double_t pyi = mom_t*TMath::Sin(dh[ii]+phi0());
+		Double_t pzi = mom_t*ct();
 		//
-		cs[ii] = TMath::Abs((pxi * nx + pyi * ny) / pt());
+		cs[ii] = TMath::Abs((pxi * nx + pyi * ny) * inv_mom_t);
 		//
 		// Store multiple scattering angles
-		Double_t corr = TMath::Abs(pxi*nx + pyi * ny + pzi * nz) / p();
+		Double_t corr = TMath::Abs(pxi*nx + pyi * ny + pzi * nz) * inv_mom;
 		Double_t Rlf = fG->lTh(i) / (corr*fG->lX0(i));	// Rad. length fraction
-		Double_t beta = p()/TMath::Sqrt(mass*mass+p()*p());
 		thms[ii] = 0.0136*TMath::Sqrt(Rlf)*
-			   (1.0 + 0.038*TMath::Log(Rlf/(beta*beta))) /(beta*p());	// MS angle
+			   (1.0 + 0.038*TMath::Log(Rlf/(beta*beta))) /(beta*mom);	// MS angle
 		if (!MS)thms[ii] = 0;
 	}
 	//std::cout<<"p= "<<p()<<", pt = "<<pt()<<", theta = "<<180.*TMath::ATan(1./ct())/TMath::Pi()<<
@@ -1458,10 +1462,15 @@ void SolTrack::KalmanCovT(Bool_t Res, Bool_t MS, Double_t mass)
 	//
 	mTot = HitList(ihh, rhh, phh, zhh);		// hit layer list
 	// Store phases
+	Double_t inv_onetwocd = 1.0/(1.+2.*C()*D());
+	Double_t inv_ct = 1.0/ct();
+	Double_t mom_t = pt();
+	Double_t mom = p();
+	
 	for(Int_t i = 0; i < Nhit; i++){
-		if(TMath::Abs(ct()) > 1.0e-3) dhh[i] = 2*C()*(zhh[i]-z0())/ct();
+		if(TMath::Abs(ct()) > 1.0e-3) dhh[i] = 2*C()*(zhh[i]-z0())*inv_ct;
 		else dhh[i] = 2*TMath::ASin(C()*TMath::Sqrt((rhh[i]*rhh[i]-D()*D())/
-		(1.+2.*C()*D())));
+							    inv_onetwocd));
 
 		adhh[i] = TMath::Abs(dhh[i]);
 	}
@@ -1490,6 +1499,8 @@ void SolTrack::KalmanCovT(Bool_t Res, Bool_t MS, Double_t mass)
 	Double_t *thms = new Double_t[Nhit];		// Scattering angles/plane
 	//
 	Int_t mLast = -1;				// Last measurement layer
+	Double_t beta = mom/TMath::Sqrt(mass*mass+mom*mom);
+
 	for (Int_t ii = 0; ii < Nhit; ii++)		// Hit layer loop
 	{
 
@@ -1507,18 +1518,17 @@ void SolTrack::KalmanCovT(Bool_t Res, Bool_t MS, Double_t mass)
 			nz = 1.0;
 		}
 		// Momenta at layer
-		Double_t pxi = pt()*TMath::Cos(dh[ii]+phi0());
-		Double_t pyi = pt()*TMath::Sin(dh[ii]+phi0());
-		Double_t pzi = pt()*ct();
+		Double_t pxi = mom_t*TMath::Cos(dh[ii]+phi0());
+		Double_t pyi = mom_t*TMath::Sin(dh[ii]+phi0());
+		Double_t pzi = mom_t*ct();
 		//
-		cs[ii] = TMath::Abs((pxi * nx + pyi * ny) / pt());
+		cs[ii] = TMath::Abs((pxi * nx + pyi * ny) / mom_t);
 		//
 		// Store multiple scattering angles
-		Double_t corr = TMath::Abs(pxi*nx + pyi * ny + pzi * nz) / p();
+		Double_t corr = TMath::Abs(pxi*nx + pyi * ny + pzi * nz) / mom;
 		Double_t Rlf = fG->lTh(i) / (corr*fG->lX0(i));	// Rad. length fraction
-		Double_t beta = p()/TMath::Sqrt(mass*mass+p()*p());
 		thms[ii] = 0.0136*TMath::Sqrt(Rlf)*
-			   (1.0 + 0.038*TMath::Log(Rlf/(beta*beta))) /(beta*p());	// MS angle
+			   (1.0 + 0.038*TMath::Log(Rlf/(beta*beta))) /(beta*mom);	// MS angle
 		if (!MS)thms[ii] = 0;
 	}
 	//std::cout<<"p= "<<p()<<", pt = "<<pt()<<", theta = "<<180.*TMath::ATan(1./ct())/TMath::Pi()<<
@@ -1592,8 +1602,9 @@ void SolTrack::KalmanCovT(Bool_t Res, Bool_t MS, Double_t mass)
 			Double_t csa = 0;		// Cosine stereo angle
 			Double_t ssa = 0;		// Sine stereo angle
 			Double_t sg;			//** protected resolution
-			TVectorD Rm(5); 		// Measurement derivative
 			TMatrixD Hk(nmeai,5);	// dzk/dalpha
+			//these can be moved out
+			TVectorD Rm(5); 		// Measurement derivative
 			TMatrixDSym Rk(nmeai);	// Measurements covariance
 			Rk.Zero();
 			//
