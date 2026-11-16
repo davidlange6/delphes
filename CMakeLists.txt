@@ -79,7 +79,7 @@ target_link_libraries(Delphes PUBLIC ROOT::Core ROOT::Hist ROOT::Tree ROOT::Math
 
 # Do not export the symbols of the bundled FastJet / SISCone, so that they do
 # not clash with a separate FastJet library loaded in the same process
-option(HIDE_BUNDLED_FASTJET_SYMBOLS "Do not export the symbols of the bundled FastJet from libDelphes" ON)
+option(HIDE_BUNDLED_FASTJET_SYMBOLS "Do not export the symbols of the bundled FastJet from libDelphes" OFF)
 if(HIDE_BUNDLED_FASTJET_SYMBOLS AND NOT APPLE AND NOT WIN32)
   set(DELPHES_VERSION_SCRIPT ${CMAKE_SOURCE_DIR}/cmake/libDelphes.map)
   target_link_options(Delphes PRIVATE "LINKER:--version-script=${DELPHES_VERSION_SCRIPT}")
